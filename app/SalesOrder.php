@@ -20,29 +20,26 @@ class SalesOrder extends Model
     public function newSONo()
     {
         if (Preference::verify('so_auto') == 0) {
-            return '';
-        }
+    return '';
+}
 
-        $so_no_list[] = $this->newQuery()
-        ->where('so_no', 'like', '%SO%')
-        ->max('so_no');
+$so_no_list = $this->newQuery()
+    ->where('so_no', 'like', '%SO%')
+    ->max('so_no');
 
-        // $so_no_list = $this->newQuery()
-        //     ->where('so_no', 'like', '%SO%')
-        //     ->orderBy('id', 'desc')
-        //     ->limit(1)
-        //     ->get()
-        //     ->toArray();
+$str_length = 5;
+$year = Carbon::now()->format('y');
 
+// Initialize $so_no to prevent errors
+$so_no = $so_no_list ? [$so_no_list] : [];
 
-        $str_length = 5;
-        $year       = Carbon::now()->format('y');
-
-        if (isset($so_no_list)) {
-            $so_no = $so_no_list;
-        }
-
-        $numbering = explode('-', $so_no[0])[1];
+// Check if $so_no is not empty and has valid format
+if (!empty($so_no) && isset($so_no[0]) && strpos($so_no[0], '-') !== false) {
+    $numbering = explode('-', $so_no[0])[1];
+} else {
+    // Handle cases where $so_no is invalid or not in expected format
+    $numbering = str_pad('1', $str_length, '0', STR_PAD_LEFT); // Default numbering
+}
 
         $year      = Carbon::now()->format('y');
         $final_num = (int) $numbering + 1;

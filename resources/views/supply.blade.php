@@ -5,7 +5,6 @@
 
         <!-- Content Row -->
         <div class="row">
-
             <div class="col-lg-12 mb-4">
                 <!-- Approach -->
                 <div class="card shadow mb-4">
@@ -15,6 +14,9 @@
                     <div class="card-body">
                         <button class="btn btn-primary btn-sm" id="recalibrate">
                             Recalibrate
+                        </button>
+                        <button class="btn btn-primary btn-sm" id="add_supply">
+                            Add Supply Manual
                         </button>
                         <div class="row">
                             <div class="col-md-12 mt-3">
@@ -78,6 +80,43 @@
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                         <button type="button" class="btn btn-primary" data-dismiss="modal" @click="updateQuantity">Save
+                            Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="supply_modal" class="modal fade" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Supply Manually</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <div class="form-group">
+                                    <label>Product</label>
+                                    <select name="products" id="products" class="form-control">
+                                        <option value="">Select Product</option>
+                                        @foreach ($products as $product)
+                                            <option value="{{ $product->id }}">{{ $product->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Quantity</label>
+                                    <input type="number" id="quantity" name="quantity" class="form-control">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" data-dismiss="modal" id="save_supply" >Save
                             Changes
                         </button>
                     </div>
@@ -168,7 +207,8 @@
                             $this.dt.draw();
                         }
                     });
-                }
+                },
+
             },
             mounted() {
                 var $this = this;
@@ -277,6 +317,30 @@
                             });
                         });
 
+                        $('#save_supply').on('click', function() {
+                            let products = $('#products').val();
+                                let quantity = $('#quantity').val();
+                                $.ajax({
+                                    url: "{{ route('supply.add.manual') }}",
+                                    method: 'POST',
+                                    data: {
+                                        product_id: products,
+                                        quantity: quantity
+                                    },
+                                    success: function(value) {
+                                        console.log(value)
+                                        if(value.message == 'Supply added'){
+                                            Swal.fire({
+                                                icon: 'success',
+                                                title: 'Success',
+                                                text: 'Supply added'
+                                            });
+                                            $this.dt.draw();
+
+                                        }
+                                    }
+                                });
+                        });
 
 
 
@@ -293,7 +357,16 @@
                         $('.links-btn-quantity').on('click', function() {
                             $('#quantityModal').modal('show');
                         });
+                        $('#add_supply').on('click', function() {
+                            $('#supply_modal').modal('show');
+                        });
                     }
+                });
+
+                $('#products').select2({
+                    placeholder: "Select Product",
+                    allowClear: true,
+                    width: '100%' // Ensures the dropdown takes full width of the parent
                 });
             }
         });
