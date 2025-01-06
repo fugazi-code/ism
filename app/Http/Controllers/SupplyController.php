@@ -18,7 +18,24 @@ class SupplyController extends Controller
      */
     public function index()
     {
-        return view('supply');
+
+        $products = DB::table('products')->get();
+
+        return view('supply', compact('products'));
+    }
+
+    public function add_supply(Request $request){
+        // insert to supply table
+        $products = DB::table('products')->where('id', $request->product_id)->first();
+
+        $checkExist = Supply::where('product_id', $request->product_id)->first();
+
+        if($checkExist){
+            $checkExist->quantity += $request->quantity;
+            $checkExist->save();
+            return response()->json(['message' => 'Supply added']);
+        }
+
     }
 
     public function table()
