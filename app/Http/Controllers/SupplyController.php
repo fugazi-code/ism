@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
 
 class SupplyController extends Controller
@@ -26,25 +27,48 @@ class SupplyController extends Controller
 
     public function add_supply(Request $request){
         // insert to supply table
-        $products = DB::table('products')->where('id', $request->product_id)->first();
+       // Validate the incoming request
+    $validator = Validator::make($request->all(), [
+        'product_id' => 'required|exists:products,id',
+        'quantity' => 'required|numeric|min:1',
+    ]);
 
-        $checkExist = Supply::where('product_id', $request->product_id)->first();
+    if ($validator->fails()) {
+        return response()->json([
+            'message' => 'Validation error',
+            'errors' => $validator->errors(),
+        ], 422);
+    }
 
-        $user = auth()->user();
+    // Fetch the product details
+    $product = DB::table('products')->find($request->product_id);
+    if (!$product) {
+        return response()->json(['message' => 'Product not found'], 404);
+    }
 
-        if($checkExist){
-            $checkExist->quantity += $request->quantity;
-            $checkExist->save();
-            return response()->json(['message' => 'Supply added']);
-        }else{
-            $supply = new Supply();
-            $supply->product_id = $request->product_id;
-            $supply->quantity = $request->quantity;
-            $supply->unit_cost = $products->selling_price;
-            $supply->assigned_to = $user->id;
-            $supply->save();
-            return response()->json(['message' => 'Supply added']);
-        }
+    // Check if the supply record already exists
+    $supply = Supply::where('product_id', $request->product_id)->first();
+    $user = auth()->user();
+
+    if ($supply) {
+        // Update the existing supply record
+        $supply->quantity += $request->quantity;
+        $supply->save();
+        return response()->json(['message' => 'Supply added']);
+
+    } else {
+
+    $supplies = new Supply();
+    $supplies->product_id = $request->product_id;
+    $supplies->quantity = $request->quantity;
+    $supplies->unit_cost = $product->selling_price;
+    $supplies->assigned_to = $user->id;
+    $supplies->save();
+
+
+        return response()->json(['message' => 'Supply added']);
+
+    }
 
     }
 
