@@ -336,7 +336,8 @@
                                                 text: 'Supply added'
                                             });
                                             $this.dt.draw();
-
+                                            $('#products').val("");
+                                            $('#quantity').val("");
                                         }
                                     }
                                 });
