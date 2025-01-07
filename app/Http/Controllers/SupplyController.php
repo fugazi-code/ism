@@ -30,9 +30,19 @@ class SupplyController extends Controller
 
         $checkExist = Supply::where('product_id', $request->product_id)->first();
 
+        $user = auth()->user();
+
         if($checkExist){
             $checkExist->quantity += $request->quantity;
             $checkExist->save();
+            return response()->json(['message' => 'Supply added']);
+        }else{
+            $supply = new Supply();
+            $supply->product_id = $request->product_id;
+            $supply->quantity = $request->quantity;
+            $supply->unit_cost = $products->selling_price;
+            $supply->assigned_to = $user->id;
+            $supply->save();
             return response()->json(['message' => 'Supply added']);
         }
 
