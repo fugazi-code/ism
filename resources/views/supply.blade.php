@@ -315,6 +315,7 @@
                                     });
                                 }
                             });
+
                         });
 
                         $('#save_supply').on('click', function() {
