@@ -17,6 +17,7 @@ use Yajra\DataTables\DataTables;
 use Illuminate\Support\Facades\DB;
 use App\Exports\PurchaseReportExcel;
 use App\Http\Controllers\Controller;
+use App\SupplyHistory;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -165,6 +166,7 @@ class PurchaseInfoController extends Controller
         }
 
         $data['overview']['po_no']       = PurchaseInfo::generate()->newPONo();
+
         $data['overview']['created_at']  = Carbon::now()->format('Y-m-d');
         $data['overview']['assigned_to'] = auth()->id();
         $id                              = DB::table('purchase_infos')->insertGetId($data['overview']);
@@ -191,11 +193,37 @@ class PurchaseInfoController extends Controller
                     $product = Product::find($item['product_id']);
                     $product->selling_price = $item['selling_price'];
                     $product->vendor_price = $item['vendor_price'];
+
                     $product->save();
                 }
             }
-
             $pd = DB::table('product_details')->insert($product_details);
+
+            //get Pruchase Order Info
+            $purchase_info = PurchaseInfo::find($id);
+
+            if($purchase_info->status == "Received"){
+                foreach ($product_details as $product_detail) {
+                    $product_data = Product::where('id', $product_detail['product_id'])->first();
+
+                    // get Balance in Supply
+                    $supply = Supply::where('product_id',$product_detail['product_id'])->first();
+                    $SupplyHistory = new SupplyHistory(); // New instance for each record
+                    $SupplyHistory->product_id = $product_detail['product_id'];
+                    $SupplyHistory->po_so_id = $data['overview']['po_no'];
+                    $SupplyHistory->product_name = $product_data->name;
+                    $SupplyHistory->previous = $supply->quantity;
+                    $SupplyHistory->quantity = $product_detail['qty'];
+                    $SupplyHistory->balance_qty = $supply->quantity + $product_detail['qty'];
+                    $SupplyHistory->unit = $product_data->unit;
+                    $SupplyHistory->in_out = 'In';
+                    $SupplyHistory->from = "Purchase Order";
+                    $SupplyHistory->item_status = $purchase_info->status;
+                    $SupplyHistory->action_by = auth()->id();
+                    $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+                    $SupplyHistory->save();
+                }
+            }
         }
 
         if ($pd) {
@@ -367,7 +395,12 @@ class PurchaseInfoController extends Controller
                     $purchase = PurchaseInfo::find($po_id);
                     $purchase->received_date = null;
                     $purchase->status = $data['status'];
+
                     if ($data['status'] == 'Received') {
+
+                        $SupplyHistory = new SupplyHistory();
+
+
                         $purchase->received_date = Carbon::now()->format('Y-m-d');
                     }
                     $purchase->save();
@@ -419,7 +452,70 @@ class PurchaseInfoController extends Controller
                 $purchase->received_date = null;
                 $purchase->status = $data['status'];
                 if ($data['status'] == 'Received') {
+                    $product_details = ProductDetail::where('purchase_order_id', $data['id'])->get();
+
+                    foreach ($product_details as $product_detail) {
+                         $product_data = Product::where('id', $product_detail['product_id'])->first();
+
+                    // get Balance in Supply
+                    $supply = Supply::where('product_id',$product_detail['product_id'])->first();
+                    $SupplyHistory = new SupplyHistory(); // New instance for each record
+                    $SupplyHistory->product_id = $product_detail['product_id'];
+                    $SupplyHistory->po_so_id = $data['po_no'];
+                    $SupplyHistory->product_name = $product_data->name;
+                    $SupplyHistory->previous = $supply->quantity;
+                    $SupplyHistory->quantity = $product_detail['qty'];
+                    $SupplyHistory->balance_qty = $supply->quantity + $product_detail['qty'];
+                    $SupplyHistory->unit = $product_data->unit;
+                    $SupplyHistory->in_out = 'In';
+                    $SupplyHistory->from = "Purchase Order";
+                    $SupplyHistory->item_status = "Received";
+                    $SupplyHistory->action_by = auth()->id();
+                    $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+                    $SupplyHistory->save();
+                    }
+
                     $purchase->received_date = Carbon::now()->format('Y-m-d');
+                }
+                else{
+                    $product_details = ProductDetail::where('purchase_order_id', $data['id'])->get();
+
+                    for ($x=0; $x < count($product_details); $x++) {
+
+                        $product_data = Product::where('id', $product_details[$x]['product_id'])->first();
+
+                        // get Balance in Supply
+                        $supply = Supply::where('product_id',$product_details[$x]['product_id'])->first();
+
+                        $SupplyHistory = new SupplyHistory(); // New instance for each record
+                        $SupplyHistory->product_id = $product_details[$x]['product_id'];
+                        $SupplyHistory->po_so_id = $data['po_no'];
+                        $SupplyHistory->product_name = $product_data->name;
+                        $SupplyHistory->previous = $supply->quantity;
+                        $SupplyHistory->quantity = $product_details[$x]['qty'];
+                        $SupplyHistory->balance_qty = $supply->quantity - $product_details[$x]['qty'];
+                        $SupplyHistory->unit = $product_data->unit;
+                        $SupplyHistory->in_out = 'Out';
+                        $SupplyHistory->from = "Purchase Order";
+                        $SupplyHistory->item_status = "Ordered";
+                        $SupplyHistory->action_by = auth()->id();
+                        $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+                        $SupplyHistory->save();
+
+                        // $SupplyHistory = new SupplyHistory();
+                        // $product_data = Product::where('id', $product_details[$x]->product_id)->first();
+                        // $SupplyHistory->product_id = $product_details[$x]->product_id;
+                        // $SupplyHistory->po_so_id = $data['po_no'];
+                        // $SupplyHistory->product_name = $product_data->name;
+                        // $SupplyHistory->quantity = $product_details[$x]->qty;
+                        // $SupplyHistory->unit = $product_data->unit;
+                        // $SupplyHistory->in_out = 'out';
+                        // $SupplyHistory->from = "Purchase Order";
+                        // $SupplyHistory->item_status =  $data['status'];
+                        // $SupplyHistory->action_by = auth()->id();
+                        // $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+                        // $SupplyHistory->save();
+                    }
                 }
 
                 $purchase->save();

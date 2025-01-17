@@ -15,9 +15,7 @@
                         <button class="btn btn-primary btn-sm" id="recalibrate">
                             Recalibrate
                         </button>
-                        <button class="btn btn-primary btn-sm" id="add_supply">
-                            Add Supply Manual
-                        </button>
+
                         <div class="row">
                             <div class="col-md-12 mt-3">
                                 <table id="table-supplies" class="table table-striped nowrap" style="width:100%"></table>

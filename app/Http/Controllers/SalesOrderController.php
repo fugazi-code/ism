@@ -15,6 +15,7 @@ use App\Supply;
 use App\Abilities;
 use App\Permission;
 use App\Assigned_Role;
+use App\SupplyHistory;
 use Maatwebsite\Excel\Facades\Excel;
 use PDF;
 use Carbon\Carbon;
@@ -223,7 +224,6 @@ class SalesOrderController extends Controller
     public function store(Request $request)
     {
         $data                            = $request->input();
-
         $getUser =   DB::table('users')->where('name', $data['overview']['agent'])->first();
         if($getUser){
             $data['overview']['assigned_to'] = $getUser->id;
@@ -281,7 +281,31 @@ class SalesOrderController extends Controller
                 }
                 $count++;
             }
+
+
             $pd = DB::table('product_details')->insert($product_details);
+
+            // $sales_info = SalesOrder::find($id);
+
+            // if($sales_info->status == "Received"){
+            //     foreach ($product_details as $product_detail) {
+            //         $product_data = Product::where('id', $product_detail['product_id'])->first();
+
+            //         $SupplyHistory = new SupplyHistory(); // New instance for each record
+            //         $SupplyHistory->product_id = $product_detail['product_id'];
+            //         $SupplyHistory->product_name = $product_data->name;
+            //         $SupplyHistory->quantity = $product_detail['qty'];
+            //         $SupplyHistory->unit = $product_data->unit;
+            //         $SupplyHistory->in_out = 'Out';
+            //         $SupplyHistory->from = "Sales Order";
+            //         $SupplyHistory->item_status = $sales_info->status;
+            //         $SupplyHistory->action_by = auth()->id();
+            //         $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+            //         $SupplyHistory->save();
+            //     }
+            // }
+
+
         }
 
         if ($pd) {
@@ -678,28 +702,84 @@ class SalesOrderController extends Controller
     public function updateDeliveryStatus(Request $request)
     {
         $data = $request->input();
+        $product_details = SalesOrder::where('id', $data['id'])->first();
 
         // Record Action in Audit Log
         $name = auth()->user()->name;
+        $input_status = $data['delivery_status'];
+        //check if the status is not change
 
-        if($name != 'Super Admin') {
-            \App\AuditLog::record([
-                'name' => $name,
-                'inputs' => $request->input(),
-                'url' => $request->url(),
-                'action_id' => $data['so_no'],
-                'current' => $data['delivery_status'],
-                'method' => "UPDATED"
-            ]);
+        if($product_details->delivery_status != $input_status){
+                if($name != 'Super Admin') {
+                    \App\AuditLog::record([
+                        'name' => $name,
+                        'inputs' => $request->input(),
+                        'url' => $request->url(),
+                        'action_id' => $data['so_no'],
+                        'current' => $data['delivery_status'],
+                        'method' => "UPDATED"
+                    ]);
+                }
+
+                DB::table('sales_orders')->where('id', $data['id'])
+                    ->update([
+                        'delivery_status' => $data['delivery_status'],
+                        'shipped_date' =>  $data['delivery_status'] == 'Shipped' ? now() : null
+                    ]);
+
+                if($data['delivery_status'] == 'Shipped'){
+                    $product_details = ProductDetail::where('sales_order_id', $data['id'])->get();
+
+                    foreach ($product_details as $product_detail) {
+                        $product_data = Product::where('id', $product_detail['product_id'])->first();
+
+                        $supply = Supply::where('product_id',$product_detail['product_id'])->first();
+
+                        $SupplyHistory = new SupplyHistory(); // New instance for each record
+                        $SupplyHistory->product_id = $product_detail['product_id'];
+                        $SupplyHistory->po_so_id = $data['so_no'];
+                        $SupplyHistory->product_name = $product_data->name;
+                        $SupplyHistory->previous = $supply->quantity;
+                        $SupplyHistory->quantity = $product_detail['qty'];
+                        $SupplyHistory->balance_qty = $supply->quantity - $product_detail['qty'];
+                        $SupplyHistory->unit = $product_data->unit;
+                        $SupplyHistory->in_out = 'Out';
+                        $SupplyHistory->from = "Sales Order";
+                        $SupplyHistory->item_status = "Shipped";
+                        $SupplyHistory->action_by = auth()->id();
+                        $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+                        $SupplyHistory->save();
+                    }
+                }else{
+                    $product_details = ProductDetail::where('sales_order_id', $data['id'])->get();
+
+                    foreach ($product_details as $product_detail) {
+                        $product_data = Product::where('id', $product_detail['product_id'])->first();
+
+                        $supply = Supply::where('product_id',$product_detail['product_id'])->first();
+
+                        $SupplyHistory = new SupplyHistory(); // New instance for each record
+                        $SupplyHistory->product_id = $product_detail['product_id'];
+                        $SupplyHistory->po_so_id = $data['so_no'];
+                        $SupplyHistory->product_name = $product_data->name;
+                        $SupplyHistory->previous = $supply->quantity;
+                        $SupplyHistory->quantity = $product_detail['qty'];
+                        $SupplyHistory->balance_qty = $supply->quantity + $product_detail['qty'];
+                        $SupplyHistory->unit = $product_data->unit;
+                        $SupplyHistory->in_out = 'In';
+                        $SupplyHistory->from = "Sales Order";
+                        $SupplyHistory->item_status = "Not Shipped";
+                        $SupplyHistory->action_by = auth()->id();
+                        $SupplyHistory->created_at = Carbon::now()->format('Y-m-d');
+                        $SupplyHistory->save();
+                    }
+                }
+
+                Supply::recalibrate();
+
+
+
         }
-
-        DB::table('sales_orders')->where('id', $data['id'])
-            ->update([
-                'delivery_status' => $data['delivery_status'],
-                'shipped_date' =>  $data['delivery_status'] == 'Shipped' ? now() : null
-            ]);
-
-        Supply::recalibrate();
 
         return ['success' => true];
     }
@@ -993,8 +1073,7 @@ class SalesOrderController extends Controller
             ->leftJoin('users', 'users.id', '=', 'sales_orders.assigned_to')
             ->where('sales_orders.id', $id)
             ->get()[0];
-
-        $product_details = $this->getProductDetail($id);
+            $product_details = $this->getProductDetail($id);
 
 
         $categories = [];

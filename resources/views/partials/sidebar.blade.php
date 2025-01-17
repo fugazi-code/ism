@@ -121,6 +121,11 @@
                         <i class="fas fa-fw fa-warehouse"></i>
                         <span>Supplies</span>
                     </a>
+                    <a class="collapse-item" href="{{ route('supply_history') }}">
+                        <i class="fas fa-fw fa-box"></i>
+                        <span>Supply History</span>
+
+                    </a>
                     <a class="collapse-item" href="{{ route('products') }}">
                         <i class="fas fa-fw fa-receipt"></i>
                         <span>Products</span>

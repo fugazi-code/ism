@@ -44,6 +44,7 @@ class QuoteController extends Controller
                 $vendors->where('sales_orders.delivery_status', $request->input('filter_delivery_status'));
             }
 
+
         return DataTables::of($vendors)->setTransformer(function ($data) {
             $data                   = $data->toArray();
             $data['created_at']     = Carbon::parse($data['created_at'])->format('F j, Y');
@@ -52,6 +53,7 @@ class QuoteController extends Controller
             $data['can_be_shipped'] = 1;
 
             $product_details = $this->getProductDetail($data['id']);
+
             foreach ($product_details as $products) {
                 $diff = $products->quantity - $products->qty;
 

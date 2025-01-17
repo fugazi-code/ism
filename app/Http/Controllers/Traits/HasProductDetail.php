@@ -17,7 +17,6 @@ trait HasProductDetail
         ->orderBy('product_details.created_at', 'asc') // Order by first created
         ->get();
 
-
         // return ProductDetail::query()
         //     ->selectRaw('products.code, products.category, products.type, products.unit, products.manual_id, product_details.*, supplies.quantity')
         //     ->where('sales_order_id', $id)

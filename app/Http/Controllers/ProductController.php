@@ -86,6 +86,7 @@ class ProductController extends Controller
 
     public function getList(Request $request)
     {
+
         $product = Product::query()
             ->selectRaw("id as id, name as text")
             ->whereRaw("upper(name) like '%" . strtoupper($request->term) . "%'");
