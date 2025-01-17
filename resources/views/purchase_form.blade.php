@@ -531,7 +531,7 @@
                                 labor_cost: 0,
                                 vendor_price: value.vendor_price,
                                 discount_item: 0,
-                                category: value.category
+                                // category: value.category
                             });
                             $('.select2-product').val(null).trigger('change');
                         }

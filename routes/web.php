@@ -140,6 +140,9 @@ Route::group(['middleware' => ['auth','web', 'audit']], function () {
     Route::get('/supply/versus/{id}', 'SupplyController@versus')->name('supply.so.preview');
     Route::post('/supply/recalibrate_data', 'SupplyController@recalibrate_data')->name('recalibrate.data');
 
+    Route::get('/supply_history', 'SupplyHistoryController@index')->name('supply_history')->middleware('can:supplies');
+    Route::post('/supply_history/table', 'SupplyHistoryController@table')->name('supply_history.table');
+
 
     Route::get('/users', 'UserController@index')->name('users')->middleware('can:useraccounts');
     Route::get('/user/detail/{id}', 'UserController@show')->name('user.detail')->middleware('can:useraccountsupdate');

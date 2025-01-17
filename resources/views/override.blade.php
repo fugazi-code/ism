@@ -54,6 +54,9 @@
                                                 <option value="supplies">
                                                     <strong>Supplies</strong>
                                                 </option>
+                                                <option value="supply_history">
+                                                    <strong>Supply History</strong>
+                                                </option>
                                                 <option value="job_order">
                                                     <strong>Job Order</strong>
                                                 </option>

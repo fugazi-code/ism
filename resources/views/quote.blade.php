@@ -477,7 +477,8 @@
                             title: 'Status'
                         },
                         {
-                            data: function(value) {
+                            data: function(value) {3
+
                                 if (value.can_be_shipped || value.delivery_status == 'Shipped') {
                                     var $class_color = value.delivery_status === 'Not Shipped' ?
                                         'btn-warning' : 'btn-success';
