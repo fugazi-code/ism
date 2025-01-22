@@ -14,7 +14,7 @@ trait HasProductDetail
         ->where('sales_order_id', $id)
         ->join('products', 'products.id', 'product_details.product_id')
         ->join('supplies', 'supplies.product_id', 'product_details.product_id')
-        ->orderBy('product_details.created_at', 'asc') // Order by first created
+        ->orderBy('product_details.id', 'asc') // Order by first created
         ->get();
 
         // return ProductDetail::query()

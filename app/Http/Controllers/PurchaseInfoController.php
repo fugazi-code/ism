@@ -466,7 +466,7 @@ class PurchaseInfoController extends Controller
                     $SupplyHistory->previous = $supply->quantity;
                     $SupplyHistory->quantity = $product_detail['qty'];
                     $SupplyHistory->balance_qty = $supply->quantity + $product_detail['qty'];
-                    $SupplyHistory->unit = $product_data->unit;
+                    $SupplyHistory->unit = $product_data->unit ?? 'No Unit';
                     $SupplyHistory->in_out = 'In';
                     $SupplyHistory->from = "Purchase Order";
                     $SupplyHistory->item_status = "Received";
@@ -494,7 +494,7 @@ class PurchaseInfoController extends Controller
                         $SupplyHistory->previous = $supply->quantity;
                         $SupplyHistory->quantity = $product_details[$x]['qty'];
                         $SupplyHistory->balance_qty = $supply->quantity - $product_details[$x]['qty'];
-                        $SupplyHistory->unit = $product_data->unit;
+                        $SupplyHistory->unit = $product_data->unit ?? 'No Unit';
                         $SupplyHistory->in_out = 'Out';
                         $SupplyHistory->from = "Purchase Order";
                         $SupplyHistory->item_status = "Ordered";

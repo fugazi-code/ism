@@ -81,32 +81,41 @@
                         method: "POST",
                     },
                     columns: [
-                        {data: 'id', name: 'id', title: 'ID'},
-                        {data: 'product_name', title: 'Product Name'},
+
+                        {
+                            data: function(value) {
+
+                                return '<input class="form-control" value="' + value.product_name +
+                                    '">';
+                            },
+                            name: 'value.product_name',
+                            title: 'Product Name',
+                            width: '50%'
+                        },
                         {data: 'previous', title: 'PREV QTY'},
                         {data: 'quantity', title: 'QTY'},
                         {data: 'balance_qty', title: 'BALANCE QTY'},
-                        {data: 'unit', title: 'Unit'},
+                        // {data: 'unit', title: 'Unit'},
                         {data: 'from', title: 'From'},
                         {data: 'item_status', title: 'Status'},
                         {data: 'in_out', title: 'In Out'},
                         {data: 'po_so_id', title: 'PO SO Number'},
-                        {data: 'action_by', title: 'Action By'},
-                        {
-                            data: 'created_at',
-                            title: 'Date Created',
-                            render: function(data, type, row) {
-                                if (data) {
-                                    const date = new Date(data);
-                                    const formattedDate =
-                                        (date.getMonth() + 1).toString().padStart(2, '0') + '/' +
-                                        date.getDate().toString().padStart(2, '0') + '/' +
-                                        date.getFullYear();
-                                    return formattedDate;
-                                }
-                                return '';
-                            }
-                        },
+                        // {data: 'action_by', title: 'Action By'},
+                        // {
+                        //     data: 'created_at',
+                        //     title: 'Date Created',
+                        //     render: function(data, type, row) {
+                        //         if (data) {
+                        //             const date = new Date(data);
+                        //             const formattedDate =
+                        //                 (date.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                        //                 date.getDate().toString().padStart(2, '0') + '/' +
+                        //                 date.getFullYear();
+                        //             return formattedDate;
+                        //         }
+                        //         return '';
+                        //     }
+                        // },
                     ],
                     drawCallback: function () {
 
