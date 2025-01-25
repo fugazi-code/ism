@@ -78,6 +78,7 @@ class CustomerController extends Controller
             "results" => DB::table('customers')
                            ->selectRaw("id as id, name as text, mobile_phone as phone, address")
                            ->whereRaw("name LIKE '%{$request->term}%'")
+                           ->where('deleted_at', null)
                            ->get(),
         ];
     }
@@ -88,6 +89,8 @@ class CustomerController extends Controller
 
         $pdf = PDF::loadView('customer_printable', ['customers' => $customers]);
 
-        return $pdf->setPaper('a4')->download('CUSTOMER_LIST - ' . Carbon::now()->format('Y-m-d') . '.pdf');
+        return $pdf->setPaper('a4')
+            ->setTemporaryFolder(public_path())
+            ->download('CUSTOMER_LIST - ' . Carbon::now()->format('Y-m-d') . '.pdf');
     }
 }

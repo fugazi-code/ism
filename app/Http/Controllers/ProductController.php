@@ -86,6 +86,7 @@ class ProductController extends Controller
 
     public function getList(Request $request)
     {
+
         $product = Product::query()
             ->selectRaw("id as id, name as text")
             ->whereRaw("upper(name) like '%" . strtoupper($request->term) . "%'");
@@ -120,7 +121,18 @@ class ProductController extends Controller
     {
         $data                = $request->except('fast_moving', 'tags');
         $data['assigned_to'] = auth()->id();
-        $id                  = Product::query()->insertGetId($data);
+        $product = new Product();
+        foreach ($data as $key => $value) {
+            $product->$key = $value;
+        }
+        $product->created_at = date('Y-m-d H:i:s');
+        $product->updated_at = null;
+        $product->save();
+
+
+        // $id                  = Product::query()->insertGetId($data);
+
+        $id = $product->id;
 
         (new Product())->fastMoving($request, $id);
         Supply::query()->insert([
