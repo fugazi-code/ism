@@ -127,7 +127,7 @@
                 <th scope="col">Unit</th>
                 <th scope="col">(Material)<br> Unit Cost</th>
                 <th scope="col">(Material)<br> Total Cost</th>
-                <th scope="col" colspan="2">Total</th>
+                {{-- <th scope="col" colspan="2">Total</th> --}}
             </tr>
         </thead>
         <tbody>
@@ -141,8 +141,7 @@
                         <td>{{ $product['unit'] }}</td>
                         <td style="text-align: right">{{ number_format($product['selling_price'], 2) }}</td>
                         <td style="text-align: right">{{ number_format($product['qty'] * $product['selling_price'], 2) }}</td>
-                        <td colspan="2" style="text-align: right">{{ number_format($product['qty'] * $product['selling_price'] + $product['discount_item'], 2) }}
-                        </td>
+
                     </tr>
                 @else
                     <tr class="bg-category">
