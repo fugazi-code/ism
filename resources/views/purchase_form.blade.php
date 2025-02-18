@@ -108,8 +108,9 @@
                                 </div>
                                 <div class="form-group" v-if="overview.status == 'Received'">
                                     <label>Received Date</label>
-                                    <input type="date" class="form-control form-control-sm"
-                                        v-model="overview.updated_at.replace(' 00:00:00', '')">
+                                    <input type="date" class="form-control form-control-sm" v-model="overview.date_received">
+                                    {{-- <input type="date" class="form-control form-control-sm"
+                                        v-model="overview.date_received.replace(' 00:00:00', '')"> --}}
                                 </div>
                             </div>
                             <div class="col-md-12">
@@ -485,6 +486,8 @@
                         return false;
                     }
                     $this.loading = true;
+
+                    console.log($this.overview);
 
                     $.ajax({
                         url: '{{ route('purchase.update') }}',
